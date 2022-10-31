@@ -1,0 +1,50 @@
+##list displays installed and available packages.
+yum list 'http*'
+
+##search for packages (for download and installation software) 
+yum search all 'web server'
+
+##detailed information about a package (including the disk space needed for installation)
+yum info httpd
+
+##displays packages that match the path name specified
+yum provide /var/www/html
+
+##install software
+yum isntall httpd
+
+##obtains and installs a newer version of the specified package, including any dependencies. 
+sudo yum update
+
+##removes an installed software package (including any supported packages)
+sudo yum remove httpd
+
+##Installing and removing groups of software with yum
+yum also has the concept of groups, which are collections of related software installed together for a particular purpose. 
+In Red Hat Enterprise Linux 8, there are two kinds of groups. Regular groups are collections of packages. Environment groups are collections of regular groups. 
+The packages or groups provided by a group may be mandatory (they must be installed if the group is installed), default (normally installed if the group is installed), or optional (not installed when the group is installed, unless specifically requested).
+
+##shows the names of installed and available groups
+yum group list
+
+##displays information about a group (includes a list of mandatory, default, and optional package names)
+yum group list info "RPM Development Tools"
+
+##installs a group that installs its mandatory and default packages and the packages they depend on
+sudo yum group install "RPM Development Tools"
+
+##remove group modules
+sudo yum group remove -y "RPM Devlopment Tools"
+
+##viewing transaction history
+##All install and remove transactions are logged in /var/log/dnf.rpm.log
+tail -5 /var/log/dnf.rpm.log
+
+##displays a summary of install and remove transactions
+sudo yum history
+sudo yum history info 6          #spesifik ID dapat dilihat menggunakan yum history
+
+##The history undo option reverses a transaction
+sudo yum history undo 5
+
+

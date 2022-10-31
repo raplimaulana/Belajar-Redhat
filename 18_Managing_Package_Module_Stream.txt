@@ -1,0 +1,66 @@
+### MODULE STREAM ###
+Red Hat Enterprise Linux 8.0 introduces the concept of Application Streams. 
+Multiple versions of user space components shipped with the distribution are now delivered at the same time. 
+They may be updated more frequently than the core operating system packages. 
+This provides you with greater flexibility to customize Red Hat Enterprise Linux without impacting the underlying stability of the platform or specific deployments.
+
+Traditionally, managing alternate versions of an application's software package and its related packages meant maintaining different repositories for each different version. 
+For developers who wanted the latest version of an application and administrators who wanted the most stable version of the application, this created a situation that was tedious to manage. 
+This process is simplified in Red Hat Enterprise Linux 8 using a new technology called Modularity. Modularity allows a single repository to host multiple versions of an application's package and its dependencies.
+
+Red Hat Enterprise Linux 8 content is distributed through two main software repositories: BaseOS and Application Stream (AppStream).
+
+•	BaseOS
+    The BaseOS repository provides the core operating system content for Red Hat Enterprise Linux as RPM packages. 
+    BaseOS components have a life cycle identical to that of content in previous Red Hat Enterprise Linux releases.
+
+•	Application Stream
+    The Application Stream repository provides content with varying life cycles as both modules and traditional packages. 
+    Application Stream contains necessary parts of the system, as well as a wide range of applications previously available as a part of Red Hat Software Collections and other products and programs.
+    •	Module 
+        A module is a set of RPM packages that are a consistent set that belong together. 
+        A typical module can contain packages with an application, packages with the application’s specific dependency libraries, packages with documentation for the application, and packages with helper utilities.
+        •	Module Streams
+            Each module can have one or more module streams, which hold different versions of the content. 
+            Each of the streams receives updates independently. Think of the module stream as a virtual repository in the Application Stream physical repository.
+        •	Module Profiles
+            Each module can have one or more profiles. 
+            A profile is a list of certain packages to be installed together for a particular use-case such as for a server, client, development, minimal install, or other.
+
+##display a list of available modules
+yum module list
+yum module list per1
+yum module list --installed
+
+##display details of a module
+yum module info per1
+
+##installing modules
+sudo yum module install per1
+sudo yum module install postgresql:10
+sudo yum module install python36:3.6/common                  #Use the name:stream/profile syntax to install the python36 module from the 3.6 stream and the common profile
+
+*Only one module stream may be enabled for a given module. 
+ Enabling an additional module stream will disable the original module stream.
+
+##remove modules
+sudo yum module remove per1
+
+##disable module
+sudo yum module disable per1
+
+##switching modules
+##Switching module streams generally requires upgrading or downgrading the content to a different version
+##To ensure a clean switch, you should remove the modules provided by the module stream first. That will remove all the packages installed by the profiles of the module, and any modules and packages that those packages have dependencies on.
+
+#list the packages installed from the module, in the example below the postgresql:9.6 module is installed
+sudo yum module info postgresql | grep module+e18 | sed 's/.*: //g;s/\n/ /g' | xargs yum list installed
+
+#remove the packages listed from the previous command. Mark the module profiles to be uninstalled
+sudo yum module remove postgresql
+
+#after removing the module profiles reset the module stream.
+sudo yum module reset postgresql
+
+#enable a different module stream and install the module
+sudo yum module install postgresql:10

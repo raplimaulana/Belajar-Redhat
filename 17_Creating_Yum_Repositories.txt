@@ -1,0 +1,8 @@
+##view all available repositories
+yum repolist all
+
+##creating Yum Repositories (which can be accessed by server hosts Yum repositories)
+yum-config-manager --add-repo="http://dl.fedoraproject.org/pub/epel/8/x86_64/"
+
+*creates a file named /etc/yum.repos.d/ dl.fedoraproject.org_pub_epel_8_x86_64_.repo with the output shown
+

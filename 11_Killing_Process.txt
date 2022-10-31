@@ -1,0 +1,81 @@
+### KILLING PROCESS ###
+
+SIGNAL | SHORT |    DEFINITION     |                                         Purpose                                           |
+NUMBER | NAME  |                   |                                                                                           |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+1      | HUP   | Hangup            | Used to report termination of the controlling process of a terminal.                      |
+       |       |                   | Also used to request process reinitialization (configuration reload) without termination. |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+2      | INT   | Keyboard interupt | Causes program termination.                                                               |
+       |       |                   | Can be blocked or handled.                                                                |
+       |       |                   | Send by pressing INTR key sequence (Ctrl+c)                                               |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+3      | QUIT  | Keyboard quit     | Similiar to SIGINT, add process dump at termination.                                      |
+       |       |                   | Sent by pressing QUIT key sequence (Ctrk+\)                                               |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+9      | KILL  | Kill, unblockable | Causes abrupt program termination.                                                        |
+       |       |                   | Cannot be blocked, ignore or handled. Always fatal.                                       |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+15     | TERM  | Terminate         | Causes program termination.                                                               |
+default|       |                   | Unlike SIGKILL, can be blocked, ignored or handled.                                       |
+       |       |                   | The "polite" way to ask a program to terminate. Allows self-cleanup                       |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+18     | CONT  | Continue          | Send to a process to resume, if stopped.                                                  |
+       |       |                   | Cannot be blocked. Even if handled, always resume the process                             |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+19     | STOP  | Stop, Unblockable | Suspend the process.                                                                      |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+20     | TSTP  | Keyboard stop     | Unlike SIGSTOP, can be blocked, ignored or handled.                                       |
+       |       |                   | Sent by pressing SUSP key sequence (Ctrl+z)                                               |
+-------|-------|-------------------|-------------------------------------------------------------------------------------------|
+
+•	Term - Cause a program to terminate (exit) at once.
+•	Core - Cause a program to save a memory image (core dump), then terminate.
+•	Stop - Cause a program to stop executing (suspend) and wait to continue (resume).
+
+##list the names and numbers of all available signals
+kill -l
+
+##kill process
+ps aux | grep job
+kill 5194
+kill -9 5194
+kill SIGKILL 5194
+killall control
+
+#Use pkill to send a signal to one or more processes which match selection criteria. 
+#Selection criteria can be a command name, a processes owned by a specific user, or all system-wide processes. 
+
+•	Command - Processes with a pattern-matched command name.
+•	UID - Processes owned by a Linux user account, effective or real.
+•	GID - Processes owned by a Linux group account, effective or real.
+•	Parent - Child processes of a specific parent process.
+•	Terminal - Processes running on a specific controlling terminal.
+
+psaux | grep pkill
+
+
+##logging user out administrativelly 
+#check user who login
+w 
+
+#then identify the PID numbers to be killed using pgrep, which operates much like pkill.
+#including using the same options, except that pgrep lists processes rather than killing them.
+pgrep -l -u rapli
+
+atau
+
+pkill -SIGKILL -u rapli
+
+
+#The same selective process termination can be applied using parent and child process relationships. 
+#Use the pstree command to view a process tree for the system or a single user. 
+#Use the parent process's PID to kill all children they have created. 
+#This time, the parent Bash login shell survives because the signal is directed only at its child processes.
+
+#check parent and children process
+pstree -p rapli
+
+#kill parent process
+pkill -P 8391
+pkil -SIGKILL -P 8391

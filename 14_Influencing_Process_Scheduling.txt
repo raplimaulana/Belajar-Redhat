@@ -1,0 +1,31 @@
+### SCHEDULING ###
+Linux and other operating systems run more processes than there are processing units using a technique called time-slicing or multitasking. 
+The operating system process scheduler rapidly switches between processes on a single-core, giving the impression that there are multiple processes running at the same time.
+
+Different processes have different levels of importance. The process scheduler can be configured to use different scheduling policies for different processes. 
+The scheduling policy used for most processes running on a regular system is called SCHED_OTHER (also called SCHED_NORMAL), but other policies exist for various workload needs.
+
+Since not all processes are equally important, processes running with the SCHED_NORMAL policy can be given a relative priority. 
+This priority is called the nice value of a process, which are organized as 40 different levels of niceness for any process.
+
+The nice level values range from -20 (highest priority) to 19 (lowest priority). By default, processes inherit their nice level from their parent, which is usually 0. 
+Higher nice levels indicate less priority (the process easily gives up its CPU usage), while lower nice levels indicate a higher priority (the process is less inclined to give up the CPU). 
+
+Unprivileged users are only permitted to increase nice levels on their own processes. 
+They cannot lower the nice levels on their processes, nor can they modify the nice level of other users' processes.
+Once increased, unprivileged users cannot reduce the value to return to the previous nice level. 
+
+##displays process nice levels
+ps axo pid, comm, nice, cls --sort=-nice
+
+atau 
+
+shaa1sum /dev/zero &
+ps -0 pid, comm, nice 3480
+
+##changing nice levels
+nice sha1sum /dev/zero &              #secara default nice tanpa parameter = 10
+nice -n 15 sha1sum &
+
+##changing nice levels an already running process
+renice -n 19 3521

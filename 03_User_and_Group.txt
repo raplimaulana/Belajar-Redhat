@@ -1,0 +1,66 @@
+### User ###
+There are three main types of user account: the superuser, system users, and regular users.
+1. The superuser account is for administration of the system. The name of the superuser is root and the account has UID 0. 
+   The superuser has full access to the system.
+2. The system has system user accounts which are used by processes that provide supporting services. 
+   These processes, or daemons, usually do not need to run as the superuser. 
+   They are assiged non-privileged accounts that allow them to secure their files and other resources from each other and from regular users on the system. 
+3. Most users have regular user accounts which they use for their day-to-day work. 
+ 
+##Melihat informasi user yang sedang login
+id
+
+##Melihat informasi user lain
+id user02
+
+##Melihat owner files
+ls -l file1
+
+##Melihat owner directories
+ls -ld dir1
+
+##Melihat informasi process yang dieksekusi oleh user
+ps -au 
+
+##melihat user yang terdaftar pada sistem 
+/etc/passwd
+
+user01:x:1000:1000:Rapli:/home/user01:/bin/bash
+
+*user01 = Username for this user 
+ x      = The user's password used to be stored here in encrypted format. 
+           That has been moved to the /etc/shadow file, which will be covered later. This field should always be x.
+ 1000   = The UID number for this user account. 
+ 1000   = The GID number for this user account's primary group. 
+ Rapli  = The real name for this user. 
+ /home/user01 = The home directory for this user. 
+ /bin/bash    = 7.	The default shell program for this user, which runs on login. 
+
+
+
+
+
+
+### Group ###
+A group is a collection of users that need to share access to files and other system resources.
+Groups can be used to grant access to files to a set of users instead of just a single user.
+
+####melihat group yang terdaftar pada sistem 
+etc/group
+
+group01:x:10000:user01,user02,user03
+
+*group01                = Group name for this group 
+ x                      = Obsolete group password field. This field should always be x.
+ 10000                  = The GID number for this group 
+ user01, user02, user03 = A list of users who are members of this group as a supplementary group.
+
+##Primary Groups and Supplementary Groups
+Every user has exactly one primary group. By default, this is the group that will own new files created by the user.
+Normally, when you create a new regular user, a new group with the same name as that user is created. 
+That group is used as the primary group for the new user, and that user is the only member of this User Private Group. 
+It turns out that this helps make management of file permissions simpler,
+
+Users may also have supplementary groups. Membership in supplementary groups is determined by the /etc/group file. 
+Users are granted access to files based on whether any of their groups have access. 
+

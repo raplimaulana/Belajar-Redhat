@@ -1,0 +1,89 @@
+
+•	MBR partitioning scheme
+    Since 1982, the Master Boot Record (MBR) partitioning scheme has dictated how disks are partitioned on systems running BIOS firmware. 
+    This scheme supports a maximum of four primary partitions. On Linux systems, with the use of extended and logical partitions, administrators can create a maximum of 15 partitions. 
+    Because partition size data is stored as 32-bit values, disks partitioned with the MBR scheme have a maximum disk and partition size of 2 TiB.
+
+•	GPT Partitioning Scheme
+    For systems running Unified Extensible Firmware Interface (UEFI) firmware, GPT is the standard for laying out partition tables on physical hard disks. 
+    A GPT provides a maximum of 128 partitions. Unlike an MBR, which uses 32 bits for storing logical block addresses and size information, a GPT allocates 64 bits for logical block addresses. 
+    This allows a GPT to accommodate partitions and disks of up to eight zebibytes (ZiB) or eight billion tebibytes.
+
+##display the partition table on the spesific disk
+parted /dev/vda print
+
+##partition with parted
+parted /dev/vdb mklabel msdos                       #MBR disk
+parted /dev/vdb mklabel gpt                         #GPT disk
+
+
+@if MBR disk
+#partition with interactive mode
+parted /dev/vdb
+(parted) mkpart
+Partition type? primary/extended? primary 
+File system type? [ext2]?xfs
+Start?2048s                                         #Specify the sector on the disk that the new partition starts on
+End?1000MB                                          #Size = End - Start
+(parted)quit
+
+#partition manual command
+parted /dev/vdb mkpart primary xfs 2048s 1000MB
+
+##detect the new partition and to create the associated device file under the /dev directory
+udevadm settle
+
+
+@if GPT disk 
+#partition with interactive mode
+parted /dev/vdb
+(parted)mkpart
+Partition name?[]?usersdata
+File system type? [ext2]? xfs
+Start? 2048s
+End? 1000MB
+(parted) quit
+
+#partition with manual command
+parted /dev/vdb mkpart usersdata xfs 2048s 1000MB
+
+##detect the new partition and to create the associated device file under the /dev directory
+udevadm settle
+
+##deleting partition
+#display the partition table on the spesific disk
+parted /dev/vdb
+(parted)print
+
+Number Start  End    Size File system Name Flags
+1      1049kB 1000MB 999MB xfs usersdata
+
+#delete the partition
+(parted) rm 1
+(parted)quit
+
+##creating file systems
+mkfs.xfs /dev/vdb1                                   #for ext4, use mkfs.ext4
+
+##mounting file systems
+mount /dev/vdb1 /mnt                                 #mount sementara
+mount /dev/vdb1 /archive                             #folder baru bernama archive
+
+##view currently mounted file systems
+mount | grep vdb1 
+
+##persistently mounting file systems
+lsblk --fs /dev/vdb
+vim /etc/fstab
+UUID=e3db1abe-6d96-4faa-a213-b96a6f85dcc1  /archive xfs  defaults 0 0
+
+*The first zero is a binary option (0=false and 1=true) for "dumping." This is an outdated backup method and should be set to zero or unused. 
+ The next number to the right tells the system to run a filesystem check or fsck. Here, an option of 0 = skip. The root filesystem should be set to 1 and any others you want to be checked assigned after that.
+
+##reload
+systemctl daemon-reload
+
+##restart
+systemctl reboot
+
+

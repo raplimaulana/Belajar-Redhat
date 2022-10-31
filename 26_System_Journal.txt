@@ -1,0 +1,85 @@
+### SYSTEM JOURNAL ###
+The systemd-journald service stores logging data in a structured, indexed binary file called the journal. 
+This data includes extra information about the log event. 
+For example, for syslog events this includes the facility and the priority of the original message.
+
+*In Red Hat Enterprise Linux 8, the /run/log directory stores the system journal by default. 
+ The contents of the /run/log directory get cleared after a reboot. 
+ You can change this setting, and how to do so is discussed later in this chapter.
+
+##view all log message from the journal
+journalctl
+journalctl -n                    #shows the last 10 log entries
+journalctl -n 5                  #shows the last 5 log entries
+journalctl -f                    #shows the last 10 log entries
+journalctl -p err                #shows log with priority err (non-critical error condition)
+journalctl -p warning   
+journalctl --since today
+journalctl --since "2019-02-10 20:30:00" --until "2019-02-13 12:00:00"
+journalctl --since "-1 hour"     #show log in the last hour
+journalctl _SYSTEMD_UNIT=sshd.service _PID=1182
+
+*messages at notice or warning priority are in bold text while messages at the error priority or higher are in red text.
+
+##in addition to the visible content of the journal, there are fields attached to the log entries that can only be seen when verbose output is turned on
+##this is useful to reduce the output of complex searches for certain events in the journal
+journalctl -o verbose
+
+*_COMM is the name of the command
+ _EXE is the path to the executable for the process
+ _PID is the PID of the process
+ _UID is the UID of the user running the process
+ _SYSTEMD_UNIT is the systemd unit that started the proces
+
+##Storing journal
+By default, the system journals are kept in the /run/log/journal directory, which means the journals are cleared when the system reboots
+You can change the configuration settings of the systemd-journald service in the /etc/systemd/journald.conf file to make the journals persist across reboot
+
+However, even with a persistent journal, not all data is kept forever. The journal has a built-in log rotation mechanism that triggers monthly. 
+In addition, by default, the journals are not allowed to get larger than 10% of the file system it is on, or leave less than 15% of the file system free. 
+
+•	persistent = stores journals in the /var/log/journal directory which persists across reboots.
+                 if the /var/log/journal directory does not exist, the systemd-journald service creates it.
+•	volatile   = stores journals in the volatile /run/log/journal directory.
+                 As the /run file system is temporary and exists only in the runtime memory, data stored in it, including system journals, do not persist across reboot.
+•	auto       = rsyslog determines whether to use persistent or volatile storage. 
+                 if the /var/log/ journal directory exists, then rsyslog uses persistent storage, otherwise it uses volatile storage.
+
+##shows the journal entries that reflect the current size limits
+journalctl | grep -E 'Runtime | System journal'
+
+*the pipe (|) symbol acts as an or indicator. 
+ that is, grep matches any line containing either the Runtime string or the System string from the journalctl output. This fetches the current size limits on the volatile (Runtime) journal store as well the persistent (System) journal store.
+
+##configure the systemd-journald service to preserve system journals persistently across reboot
+vim /etc/systemd/journald.conf 
+Storage=persistent
+
+#restart systemd-journald service 
+systemctl restart systemd-journald
+
+atau
+
+systemctl restart systemd-journald.service
+
+*if the systemd-journald service successfully restarts, you can see that the /var/log/journal directory is created and contains one or more subdirectories
+ these subdirectories have hexadecimal characters in their long names and contain .journal files.
+ the .journal files are the binary files that store the structured and indexed journal entries.
+
+#check journal new directory
+ls /var/log/journal
+ls /var/log/journal/73ab164e278e48be9bf80e80714a8cd5
+
+##while the system journals persist across reboot, you get an extensive number of entries in the output of the journalctl command that includes entries from the current system boot as well as the previous ones
+##to limit the output to a specific system boot, use the -b option with the journalctl command
+
+#retrieves the entries limited to the first system boot
+journalctl -b 1
+
+#retrieves the entries limited to the second system boot
+#the following argument is meaningful only if the system has been rebooted for more than twice
+journalctl -b 2
+
+#retrieves the entries limited to the current system boot
+journalctl -b
+

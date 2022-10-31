@@ -1,0 +1,74 @@
+### SWAP SPACE ###
+A swap space is an area of a disk under the control of the Linux kernel memory management subsystem. 
+The kernel uses swap space to supplement the system RAM by holding inactive pages of memory. The combined system RAM plus swap space is called virtual memory.
+
+When the memory usage on a system exceeds a defined limit, the kernel searches through RAM looking for idle memory pages assigned to processes. 
+The kernel writes the idle pages to the swap area and reassigns the RAM pages to other processes. 
+If a program requires access to a page on disk, the kernel locates another idle page of memory, writes it to disk, then recalls the needed page from the swap area.
+
+##RAM and swap space recommendation
+---------------|----------------|----------------------------------------|
+     RAM       | SWAP SPACE     | SWAP SPACE IF ALLOWING FOR HIBERNATION | 
+---------------|----------------|----------------------------------------|
+< 2 GiB        | Twice the RAM  | Three times the RAM                    |
+---------------|----------------|----------------------------------------|
+2 GiB - 8 GiB  | Same as RAM    | Twice the RAM                          |
+---------------|----------------|----------------------------------------|
+8 GiB - 64 GiB | At leats 4 GIB | 1.5 times the RAM                      |
+-- ------------|----------------|----------------------------------------|
+> 64 GiB       | At leats 4 GIB | Hibernation is not recommended         |
+---------------|----------------|----------------------------------------|
+
+*The laptop and desktop hibernation function uses the swap space to save the RAM contents before powering off the system.
+ When you turn the system back on, the kernel restores the RAM contents from the swap space and does not need a complete boot. 
+ For those systems, the swap space needs to be greater than the amount of RAM. 
+
+##creating a swap space
+##display the partition table on the spesific disk
+parted /dev/vda print
+
+#partition with interactive mode
+parted /dev/vda
+(parted) mkpart
+Patition name? []? swap1
+File system type? [ext2]? linux-swap
+Start? 1001MB
+End? 1257MB
+(parted) quit
+
+#partition with manual command
+parted /dev/vda mkpart swap1 linux-swap 1001MB 1257MB
+
+##detect the new partition and to create the associated device file under the /dev directory
+udevadm settle
+
+##formatting the device
+mkswap /dev/vdb2
+
+##activating swap space
+swapon /dev/vdb2
+swapon -a                           #swap space using the entry just added to /etc/fstab         
+
+##check available swap spaces
+swapon --show
+
+atau
+
+free
+
+##deactive swap space
+swapoff /dev/vdb2
+
+##persistently activating swap space 
+lsblk --fs /dev/vdb
+vim /etc/fstab
+UUID=cb7f71ca-ee82-430e-ad4b-7dda12632328  swap swap defaults 0
+
+##reload
+systemctl daemon-reload
+
+##reboot
+systemctl reboot
+
+
+

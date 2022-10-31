@@ -1,0 +1,188 @@
+Network interface names start with the type of interface:
+•   Ethernet interfaces begin with en
+•   WLAN interfaces begin with wl
+•   WWAN interfaces begin with ww
+
+The rest of the interface name after the type will be based on information provided by the server's firmware or determined by the location of the device in the PCI topology.
+•   oX indicates that this is an on-board device and the server's firmware provided index number X for the device. 
+    So eno1 is on-board Ethernet device 1. Many servers will not provide this information.
+•   sX indicates that this device is in PCI hotplug slot X. 
+    So ens3 is an Ethernet card in PCI hotplug slot 3.
+•   pXsY indicates that this is a PCI device on bus X in slot Y. 
+    So wlp4s0 is a WLAN card on PCI bus 4 in slot 0.
+
+##list all network interfaces available on system
+ip link show
+
+##display the current IP address and netmask for all interfaces
+ip addr
+
+##view device and address information
+ip addr show ens3
+
+##show statistics about network performance 
+##the counters record statistics for things like the number of received (RX) and transmitted (TX) packets, packet errors, and packets that were dropped
+ip -s link show ens3
+
+##test connectivity
+ping 192.0.2.254 
+
+*exit dengan Ctrl+c
+
+##displaying the routing table
+ip route
+
+##tracing routes taken by traffic
+tracepath access.redhat.com
+
+##display socket statistics (listen on standard ports while clients use a random available port)
+ss -ta
+
+* -n      = show numbers instead of names for interfaces and ports
+  -t      = show TCP sockets
+  -u      = show UDP sockets
+  -l      = show only listening sockets
+  -a      = show all (listening and established) sockets
+  -p      = show the process using the sockets
+  -A inet = display active connections (but not listening sockets) for the inet address family
+            
+
+
+
+
+
+### NETWORK MANAGER ###
+NetworkManager is a daemon that monitors and manages network settings. 
+In addition to the daemon, there is a GNOME Notification Area applet providing network status information. 
+Command-line and graphical tools talk to NetworkManager and save configuration files in the /etc/sysconfig/network-scripts directory.
+
+• A device is a network interface.
+• A connection is a collection of settings that can be configured for a device.
+• Only one connection can be active for any one device at a time. 
+  If you need to temporarily change networking settings, instead of changing the configuration of a connection, you can change which connection is active for a device. 
+  For example, a device for a wireless network interface on a laptop might use different connections for the wireless network at a work site and for the wireless network at home.
+• Each connection has a name or ID that identifies it.
+• The nmcli utility is used to create and edit connection files from the command line.
+
+##viewing networking information
+nmcli dev status
+
+##displays a list of all connections
+nmcli con show
+nmcli con show --active                        #to list only the active connections
+nmcli con show "static-addr"                     #to list description about connection name static-addr
+
+##add new network connections
+nmcli con add con-name "static-addr" type ethernet ifname ens3
+nmcli con add con-name "static-addr" type ethernet ifname ens3 ipv4.address 192.168.0.5/24 ipv4.gateway 192.168.0.254
+
+*assume that the name of the network connection being added is not already in use.
+*The following command adds a new connection named eno2 for the interface eno2, which gets IPv4 networking information using DHCP and auto connects on startup. 
+ It also gets IPv6 networking settings by listening for router advertisements on the local link. 
+ The name of the configuration file is based on the value of the con-name option, eno2, and is saved to the /etc/sysconfig/network-scripts/ifcfg-eno2 file.
+
+##activates the connection name on the network 
+nmcli con up "static-addr"
+
+#reload
+sudo nmcli con reload
+
+*Note that the command takes the name of a connection, not the name of the network interface.
+
+##disconect the connection name on the network 
+nmcli dev dis ens3
+
+##change the settings for a connection
+nmcli con mod "static-addr" ipv4.address 192.0.2.2/24 ipv4.gateway 192.0.2.254
+
+#reload
+sudo nmcli con reload
+
+##deleting network connection
+nmcli con del "static-addr"
+
+##Configure the original connection so that it does not start at boot, and verify that the static connection is used when the system reboots.
+sudo nmcli con mod "Wired Connection 2" connection.autoconnect no
+
+
+##By default, changes made with nmcli con mod name are automatically saved to /etc/sysconfig/network-scripts/ifcfg-name. 
+##That file can also be manually edited with a text editor. 
+##After doing so, run nmcli con reload so that NetworkManager reads the configuration changes.
+
+##Comparisson of nm-settings and ifcfg-* directives
+
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+             NMCLI CON MOD                  |      IFCFG-* FILE       |                                                  EFFECT                                                        |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.method manual                          | BOOTPROTO=none          | IPv4 addresses configured statically.                                                                          |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.method auto                            | BOOTPROTO=dhcp          | Looks for configuration settings from a DHCPv4 server.                                                         |
+                                            |                         | If static addresses are also set, will not bring those up until we have information from DHCPv4.               |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.addresses "192.0.2.1/24 192.0.2.254"   | IPADDR0=192.0.2.1       | Sets static IPv4 address, network prefix and default gateway.                                                  |
+                                            | PREFIX0=24              | If more than one is set for the connection, then instead of 0, the icfg-* directives end with 1,2,3 and so on. |
+                                            | GATEWAY0=192.0.2.254    |                                                                                                                |                                          
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.dns 8.8.8.8                            | DNS=8.8.8.8             | Modify /etc/resolv.conf to use this nameserver.                                                                |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.dns-search example.com                 | DNS=example.com         | Modify /etc/resolve.conf to use this domain in the search directive.                                           |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.ignore-auto-dns true                   | PEERDNS=no              | Ignore DNS server information from the DHCP server.                                                            |
+------------------------------------------- |-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv6.method manual                          | IPV6_AUTOCONF=no        | IPv6 adresses configured statically.                                                                           |
+------------------------------------------- |-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.method auto                            | IPV6_AUTOCONF=yes       | Configures network settings using SLAAC from router advertisements.                                            |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.method dhcp                            | IPV6_AUTOCONF=no        | Configures network settings using DHCPv6, not SLAAC.                                                           |
+                                            | DHCPV6C=yes             |                                                                                                                |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv6.addresses "2001:db8::a/64 2001:db8::1" | IPV6ADDR=2001:db8::a/64 | Set static IPv6 addresses, network prefix and default gateway.                                                 |
+                                            | IPV6_DEFAULTGW=2001:db8 | If more than one addresses is set for connection,                                                              |
+                                            |                         | IPV6_SECONDARIES takes a double-quoted list of space-deliminated address/prefix definitions                    |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv6.dns ...                                | DOMAIN=...              | Modify /etc/resolv.conf to use this nameserver. Exactly the same as IPv4.                                      |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv6.dns-search example.com                 | DOMAIN=example.com      | Modify /etc/resolv.conf to use this domain in the search directive. Exactly the same as IPv4.                  |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+ipv4.ignore-auto-dns true                   | IPV6_PEERDNS=no         | Ignore DNS server information from the DHCP server.                                                            |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+connection.autoconnect yes                  | ONBOOT=yes              | Automatically active this connection at boot.                                                                  |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+connection.interface-name ens3              | DEVICE=ens3             | The connection is bound to the network interface with this name.                                               |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+802-3-ethernet.mac-address ...              | HWADDR=...              | The connection is bound to the network interface with this MAC address.                                        |
+--------------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------|
+
+
+##IPv4 configuration option for ifcfg file
+-----------------------|----------------|--------------------|
+        STATIC         |     DYNAMIC    |       Either       |
+-----------------------|----------------|--------------------|
+BOOTPROTO=none         | BOOTPROTO=dhcp | DEVICE=ens3        |
+IPADDR0=172.25.250.254 |                | NAME-"static-ens3" |
+PREFIX=24              |                | ONBOOT=yes         |
+GATEWAY=172.25.250.254 |                | UUID=f3e8(...)ad3e |
+DEFTOUTE=yes           |                | USERCTL=yes        |
+DNS1=172.25.254.254    |                |                    |
+-----------------------|----------------|--------------------|
+
+#Locate the network interface name 
+ip link
+
+#add ip address to network interface 
+echo "IPADDR1=192.168.0.20" | sudo tee -a /etc/sysconfig/network-scripts/ifcfg-Wired_connection_1                               #example use Wired connection 1
+echo "PREFIX=24" | sudo tee -a /etc/sysconfig/network-scripts/ifcfg-Wired_connection_1
+
+atau 
+
+vim /etc/sysconfig/network-scripts/ifcfg-Wired_connection_1
+
+##after modifying the configuration files, run nmcli con reload to make NetworkManager read the configuration changes
+##the interface still needs to be restarted for changes to take effect
+sudo nmcli con reload
+sudo nmcli con up "Wired connection 1"
+
+
+
+
+

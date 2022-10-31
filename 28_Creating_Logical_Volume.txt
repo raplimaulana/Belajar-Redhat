@@ -1,0 +1,104 @@
+### LOGICAL VOLUME ###
+Logical volumes and logical volume management (LVM) make it easier to manage disk space. 
+If a file system that hosts a logical volume needs more space, it can be allocated to its logical volume from the free space in its volume group and the file system can be resized. 
+If a disk starts to fail, a replacement disk can be registered as a physical volume with the volume group and the logical volume's extents can be migrated to the new disk.
+
+##LVM definitions 
+•	Physical devices
+    Physical devices are the storage devices used to save data stored in a logical volume. 
+    These are block devices and could be disk partitions, whole disks, RAID arrays, or SAN disks. 
+    A device must be initialized as an LVM physical volume in order to be used with LVM. 
+    The entire device will be used as a physical volume.
+
+•	Physical volumes (PVs)
+    You must initialize a device as a physical volume before using it in an LVM system. 
+    LVM tools segment physical volumes into physical extents (PEs), which are small chunks of data that act as the smallest storage block on a physical volume.
+
+•	Volume groups (VGs)
+    Volume groups are storage pools made up of one or more physical volumes. 
+    This is the functional equivalent of a whole disk in basic storage. 
+    A PV can only be allocated to a single VG. A VG can consist of unused space and any number of logical volumes.
+
+•	Logical volumes (LVs)
+    Logical volumes are created from free physical extents in a volume group and provide the "storage" device used by applications, users, and the operating system
+
+•	Physical extent (PE) 
+    size is the basic unit out of which logical volumes are created
+
+
+##prepare the physical device
+parted -s /dev/vdb mklabel gpt
+
+parted -s /dev/vdb mkpart primary 1Mib  769Mib
+parted -s /deb/vdb set 1 lvm on
+
+parted -s /dev/vdb mkpart primary 770Mib 1026Mib
+parted -s /dev/vdb set 2 lvm on
+
+*this labels the devices /dev/vdb1 and /dev/vdb2 as PVs, ready for allocation into a volume group
+
+##register the new partitions
+udevadm settle
+
+##create a physical volume
+pvcreate /dev/vdb1 /dev/vdb2
+
+*this labels the devices /dev/vdb1 and /dev/vdb2 as PVs, ready for allocation into a volume group
+
+##create a volume group
+vgcreate vg01 /dev/vdb1 /dev/vdb2
+
+*this creates a VG called vg01 that is the combined size, in PE units, of the two PVs /dev/vdb1 and /dev/vdb2
+
+##create a logical volume
+lvcreate -n lv01 -L 700M vg01
+
+*This creates an LV called lv01, 700 MiB in size, in the VG vg01
+
+##add the file system
+mkfs -t xfs /dev/vg01/lv01
+
+##make the file system available across reboots
+##Create a mount point at /data
+mkdir /data
+
+##add an entry to the /etc/fstab file
+vim /etc/fstab 
+/dev/vg01/lv01 /data xfs defaults 1 2
+
+##update systemd with the new /etc/fstab configuration
+systemctl daemon-reload
+
+##run mount /mnt/data to mount the file system that you just added in /etc/fstab
+mount /data
+
+##removing a logical volume
+##unmount the file system 
+umount /data
+
+##Different tools display the logical volume name using either the traditional name, /dev/vgname/lvname, or the kernel device mapper name, /dev/mapper/vgname-lvname
+##check the directory using mount 
+mount
+
+##remove the logical volume
+lvremove /dev/vg01/lv01
+
+##remove the volume group
+vgremove vg01
+
+##remove the physical volumes
+pvremove /dev/vdb2 /dev/vdb1
+
+##display information about physical volumes
+pvdisplay /dev/vdb1
+
+##display information about volume groups
+vgdisplay vg01
+
+##to display information about logical volumes
+lvdisplay /dev/vg01/lv01
+
+##displays human-readable disk free space
+df -h /data
+
+

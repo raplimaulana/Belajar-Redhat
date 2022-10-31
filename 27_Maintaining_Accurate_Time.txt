@@ -1,0 +1,37 @@
+### SETTING LOCAL CLOCKS AND TIME ZONES ###
+Correct synchronized system time is critical for log file analysis across multiple systems. 
+The Network Time Protocol (NTP) is a standard way for machines to provide and obtain correct time information on the Internet. 
+A machine may get accurate time information from public NTP services on the Internet, such as the NTP Pool Project. 
+
+##shows an overview of the current time-related system settings, including current time, time zone, and NTP synchronization settings of the system.
+timedatectl
+
+##shows listed a database of time zones is available 
+timedatectl list-timezones
+
+##change the system setting to update the current time zone 
+timedatectl set-timezone Asia/Jakarta
+
+##enable automatic system clock synchronization function with remote servers via NTP
+timedatectl set-ntp yes
+
+##Setting RTC Time
+#Set your hardware clock to local timezone:
+timedatectl set-local-rtc 1
+
+atau 
+
+timedatectl set-local-rtc true
+timedatectl set-ntp false
+timedatectl set-time '08:59:59' 
+
+#Set your hardware clock to coordinated universal time (UTC):
+timedatectl set-local-rtc 0
+
+atau
+
+timedatectl set-local-rtc false
+timedatectl set-ntp true
+
+*local time = waktu lokal server adalah waktu yang dikendalikan oleh sistem operasi.
+ timezone   = waktu global sesuai format UTC (Coordinated Universal Time)

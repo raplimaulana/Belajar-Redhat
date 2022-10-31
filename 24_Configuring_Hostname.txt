@@ -1,0 +1,19 @@
+##display hostname
+hostname
+
+atau 
+
+cat /etc/hostname
+
+##display hostname status
+hostname status
+
+##set hostname
+hostnamectl set-hostname host@example.com
+hostname host@example.com                                    #temporary 
+
+##Add a local nickname for host@example.com
+vim /etc/hosts
+192.168.0.254 host.example.com example.com example
+
+

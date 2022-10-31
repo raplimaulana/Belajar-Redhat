@@ -1,0 +1,68 @@
+### MOUNTING FILE SYSTEM ###
+A file system residing on a removable storage device needs to be mounted in order to access it.
+
+##list the details of a specified block device or all the available devices
+lsblk /dev/vdb
+lsblk -fp /dev/vdb                      #supaya dapet file-system UID
+
+##mount file system 
+mount /dev/vdb1 /mnt/data 
+
+*mounts the file system in the /dev/vdb1 partition on the directory /mnt/data
+ The /mnt directory exists by default and is intended for use as a temporary mount point.
+ You can use /mnt directory, or better yet create a subdirectory of /mnt to use as a temporary mount point, unless you have a good reason to mount it in a specific location in the file-system hierarchy.
+
+*If the directory acting as mount point is not empty, any files copied to that directory before the file system was mounted are not accessible until the file system is unmounted again.
+
+##Mount file system by the UUID of the file system
+mount UUID="46f543fd-78c9-4526-a857-244811be2d88" /mnt/data
+
+##The removable storage device is mounted at /run/media/USERNAME/LABEL where USERNAME is the name of the user logged into the graphical environment and LABEL is an identifier, often the name given to the file system when it was created if one is available.
+
+##unmount file system
+##The shutdown and reboot procedures unmount all file systems automatically
+##File system data is often cached in memory. Therefore, in order to avoid corrupting data on the disk, it is essential that you unmount removable drives before unplugging them. The unmount procedure synchronizes data before releasing the drive, ensuring data integrity.
+umount /mnt/data
+
+*Unmounting is not possible if the mounted file system is in use. 
+ For the umount command to succeed, all processes needs to stop accessing data under the mount point.
+
+lsof /mnt/data
+SIGTERM or SIGKILL all process
+umount /mnt/data
+
+
+
+
+
+
+### MOUNTING NEW PARTITION DISK ###
+#check name disk to be partitioned
+lsblk
+
+#partition with GPT format or MBR format
+parted /dev/vdb mklabel gpt 
+
+#partition as primary disk in selected format data (xfs,fat32,etc)
+parted -a opt /dev/vdb mkpart primary xfs 0% 100%
+
+#creating file systems
+mkfs.xfs /dev/vdb1
+
+#Create the /mnt/newspace directory
+mkdir /mnt/newspace
+
+#discover the UUID of the device
+lsblk -fp /dev/vdb
+
+#mount folder
+mount /dev/vdb1 /mnt/newspace
+
+atau
+
+mount UUID="46f543fd-78c9-4526-a857-244811be2d88" /mnt/data
+
+#verify the folder are successful to mount or not
+lsblk -fp /dev/vdb1 
+
+

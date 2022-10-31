@@ -1,0 +1,54 @@
+### STRATIS ###
+Stratis runs as a service that manages pools of physical storage devices, and transparently creates and manages volumes for the file systems being created.
+
+In a volume-managed file system, file systems are built inside shared pools of disk devices using a concept known as thin provisioning. 
+Stratis file systems do not have fixed sizes and no longer preallocate unused block space. 
+Although the file system is still built on a hidden LVM volume, Stratis manages the underlying volume for you and can expand it when needed. 
+The in-use size of a file system is seen as the amount of actual blocks in use by contained files. 
+The space available to a file system is the amount of space still unused in the pooled devices on which it resides. 
+Multiple file systems can reside in the same pool of disk devices, sharing the available space, but file systems can also reserve pool space to guarantee availability when needed.
+
+Stratis uses stored metadata to recognize managed pools, volumes, and file systems. They should only be managed using Stratis tools and commands.
+Manually configuring Stratis file systems could cause the loss of that metadata and prevent Stratis from recognizing the file systems it has created.
+
+You can create multiple pools with different sets of block devices. From each pool, you can create one or more file systems. 
+Currently, you can create up to 2 24 file systems per pool. 
+You can create multiple pools with different sets of block devices. From each pool, you can create one or more file systems. Currently, you can create up to 2 24 file systems per pool. 
+
+##install Stratis
+yum install stratis-cli stratisid
+
+##activate stratisd service
+systemctl enable --now stratisid 
+
+##create pools of one or more block devices 
+stratis pool create pool1 /dev/vdb
+
+*each pool is a subdirectory under the /stratis directory
+
+##view the list of available pools
+stratis pool list
+
+##view the block devices of a pool
+stratis blockdev list pool1
+
+##add additional block devices to a pool
+stratis pool add-data pool1 /dev/vdc
+
+##create a dynamic and flexible file system from a pool
+stratis filesystem create pool1 filesystem1
+
+*the links to the Stratis file systems are in the /stratis/pool1 directory
+
+##stratis supports file-system snapshotting with the stratis filesystem snapshot command 
+##snapshots are independent of the source file systems
+stratis filesystem snapshot pool1 filesystem1 snapshot1
+
+##view the list of available file systems
+stratis filesytem list
+
+##persistently mount a Stratis file system
+lsblk --output=UUID /stratis/pool1/filesystem1
+UUID=31b9...8c55 /dir1 xfs defaults,x-systemd.requires=stratisd.service 0 0
+
+*x-systemd.requires=stratisd.service = mount option delays mounting the file system until after systemd starts the stratisd.service during the boot process

@@ -1,0 +1,24 @@
+### Add Group ###
+##add specific group by id
+sudo groupadd -g 10000 group01
+
+##check available group
+tail groupadd -g 10000 group01
+
+##changes the properties of an existing group
+sudo groupmod -n group0222 group01
+sudo groupmod -g 20000 group01
+
+##add user to primary group
+sudo usermod -g group01 user01
+
+##add user to supplementary group
+sudo usermod -aG group01 user01
+
+*The use of the -a option makes usermod function in append mode. 
+ Without -a, the user will be removed from any of their current supplementary groups that are not included in the -G options list.
+
+##delete group
+sudo groupdel group01
+
+

@@ -1,0 +1,93 @@
+### EXTENDING A VOLUME GROUP ###
+##create new physical volume
+parted -s /dev/vdb mklabel gpt
+
+parted -s /dev/vdb mkpart primary 1027Mib 1539Mib
+parted -s /dev/vdb set 3 lvm on
+
+udevadm settle
+
+pvcreate /dev/vdb3
+
+##extend the volume group
+vgextend vg01 /dev/vdb3
+
+*this extends the vg01 VG by the size of the /dev/vdb3 PV
+
+
+
+
+
+
+### REDUCING A VOLUME GROUP ###
+##move the physical extents
+pvmove /dev/vdb3
+
+*this command moves the Physical Extent (PE) from /dev/vdb3 to other Physical Volume (PV) with free Physical Extent (PE) in the same Volume Group (VG).
+ Physical Extent = size is the basic unit out of which logical volumes are created.
+
+*before using pvmove, back up data stored on all logical volumes in the volume group.
+ this could cause loss of data on logical volumes in the volume group.
+
+##Reduce the volume group
+vgreduce vg01 /dev/vdb3
+
+*this removes the /dev/vdb3 PV from the vg01 VG.
+
+
+
+
+
+
+### EXTENDING A LOGICAL VOLUME ###
+##Extending LVs Examples
+
+----------------=----|------------------------------------------------------------|
+       COMMAND       |                         RESULTS                            |
+---------------------|------------------------------------------------------------|
+ lvextend -l 128M  | Resize the logical volume to exactly 128 extents in size.    |
+---------------------|------------------------------------------------------------|
+ lvextend -L 128M    | Resize the logical volume to exactly 128 MiB.              |
+---------------------|------------------------------------------------------------|
+ lvextend -l +128M   | Add 128 extents to the current size of the logical volume. |
+---------------------|------------------------------------------------------------|
+ lvextend -L +128M   | Add 128 MiB to the current size of the logical volume.     |
+---------------------|------------------------------------------------------------|
+ lvextend - +50%FREE | Add 50% of the current free space in the VG to the LV.     |
+---------------------|------------------------------------------------------------|
+
+*-L +100M to add the new space using size in MiB.
+ -l +25 to add the additional extents needed.
+ -l 175 to specify the total number of extents (175 PEs x 4 MiB).
+
+##extend the logical volume and xfs file system
+#extend the logical volume
+lvextend -L +300M /dev/vg01/lv01
+
+#extend the file system
+xfs_growfs /data
+
+
+##extend the logical volume and ext4 file system
+#extend the logical volume
+lvextend -L +300M /dev/vg01/lv01
+
+#extend the file system
+resize2fs /dev/vg01/lv01
+
+
+##extend the logical volume and swap space
+#deactivate the swap space
+swapoff -v /dev/vg01/lv01
+
+*your system must have enough free memory or swap space to accept anything that needs to page in when the swap space on the logical volume is deactivated
+
+#extend the logical volume
+lvextend -L +300M /dev/vg01/lv01
+
+#format the logical volume as swap space
+mkswap /dev/vg01/lv01
+
+#activate the swap space
+swapon -va /dev/vg01/lv01
+

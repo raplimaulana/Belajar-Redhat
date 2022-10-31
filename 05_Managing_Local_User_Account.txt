@@ -1,0 +1,27 @@
+### Add User ###
+##add user
+useradd operator1
+
+##set password
+passwd operator1
+
+##add description
+usermod 0c "Operator One" operator1
+
+##switch to operator1 user
+su - operator1
+
+*if user want to access sudo
+#try acces sudo su 
+sudo su -
+
+#if error, add this file in root user
+vim /etc/sudoers.d/operator1
+operator1 ALL=(ALL) ALL
+
+##Lock user
+sudo usermod -L user03
+
+##delete user
+userdel operator1
+

@@ -1,0 +1,28 @@
+##All hard links that reference the same file will have the same link count, access permissions, user and group ownerships, time stamps, and file content. 
+##If any of that information is changed using one hard link, all other hard links pointing to the same file will show the new information as well. 
+##This is because each hard link points to the same data on the storage device.
+##Even if the original file gets deleted, the contents of the file are still available as long as at least one hard link exists. 
+##Data is only deleted from storage when the last hard link is deleted.
+
+### Hard Link ###
+1. Hard links can only be used with regular files. You cannot use ln to create a hard link to a directory or special file. 
+2. Hard links can only be used if both files are on the same file system. The file-system hierarchy can be made up of multiple storage devices. 
+   Depending on the configuration of your system, when you change into a new directory, that directory and its contents may be stored on a different file system. 
+
+ln newfile.txt /tmp/newfile-hlink2.txt
+
+
+
+
+
+
+### Soft Link ###
+1. They can link two files on different file systems. 
+2. They can point to a directory or special file, not just a regular file.
+3. When the original regular file gets deleted, the soft link will still point to the file but the target is gone. 
+   A soft link pointing to a missing file is called a "dangling soft link."
+
+ln -s /home/user/newfile-link2.txt /tmp/newfile-symlink.txt
+
+##Check file link
+ls -l newfile-link2.txt /tmp/newfile-symlink.txt

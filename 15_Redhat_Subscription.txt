@@ -1,0 +1,18 @@
+##Register a system to a Red Hat account
+subscription-manager register --username=raplimaulana --password=rapli123
+
+##check available subscription
+subscription-manager list --available | less
+
+##auto-attach a subscription
+subscription-manager attach --auto
+
+##attach a subscription from a specific pool from the list of available subscriptions
+subscription-manager attach --pool=poolID
+
+##view consumed subscriptions
+subscription-manager list --consumed
+
+##unregister a system
+subscription-manager unregister
+

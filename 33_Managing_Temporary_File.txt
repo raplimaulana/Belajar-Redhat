@@ -1,0 +1,108 @@
+### MANAGING TEMPORARY FILES ###
+A modern system requires a large number of temporary files and directories. 
+Some applications (and users) use the /tmp directory to hold temporary data, while others use a more task-specific location such as daemon and user-specific volatile directories under /run.
+
+To keep a system running cleanly, it is necessary for these directories and files to be created when they do not exist. 
+Because daemons and scripts might rely on them being there, and for old files to be purged so that they do not fill up disk space or provide faulty information.
+
+Red Hat Enterprise Linux 7 and later include a new tool called systemd-tmpfiles, which provides a structured and configurable method to manage temporary directories and files.
+When systemd starts a system, one of the first service units launched is systemd-tmpfiles- setup. 
+This service runs the command systemd-tmpfiles --create --remove*8. This command reads configuration files from /usr/lib/tmpfiles.d/.conf, /run/tmpfiles.d/.conf, and /etc/tmpfiles.d/.conf*.
+Any files and directories marked for deletion in those configuration files is removed, and any files and directories marked for creation (or permission fixes) will be created with the correct permissions if necessary.
+
+##cleaning temporary files using config file
+systemd-tmpfiles --clean 
+
+*The command systemd-tmpfiles --clean parses the same configuration files as the systemd-tmpfiles --create command, but instead of creating files and directories, it will purge all files which have not been accessed, changed, or modified more recently than the maximum age defined in the configuration file.
+
+or use timer
+
+vim systemd-tmpfiles-clean.timer
+
+[Timer]
+OnBoot=15min
+
+*OnBootSec=15min*8    = indicates that the service unit called systemd-tmpfiles-clean.service gets triggered 15 minutes after the system has booted up.
+ OnUnitActiveSec=1d** = indicates that any further trigger to the systemd-tmpfiles-clean.service service unit happens 24 hours after the service unit was activated last.
+
+systemd-tmpfiles-clean.timer
+
+#after changing the timer unit configuration file, reloads the systemd manager configuration
+systemctl daemon-reload
+
+#activate the systemd-tmpfiles-clean.timer unit.
+systemctl enable --now systemd-tmpfiles-clean.timer
+
+
+##cleaning temporary files manually
+#the basic syntax consists of seven columns: Type, Path, Mode, UID, GID, Age, and Argument
+d /run/systemd/seats 0755 root root -
+
+*d = create a directory if it does not yet exist.
+ Z = recursively restore SELinux contexts and file permissions and ownership
+
+*create the /run/systemd/seats directory if it does not yet exist.
+ owned by the user root and the group root, with permissions set to rwxr-xr-x. 
+ this directory will not be automatically purged.
+
+D /home/student 0700 student student 1d
+
+*create the /home/student directory if it does not yet exist. If it does exist, empty it of all contents. 
+ When systemd-tmpfiles --clean is run, remove all files which have not been accessed, changed, or modified in more than one day.
+
+L /run/fstablink - root root - /etc/fstab
+
+*create the symbolic link /run/fstablink pointing to /etc/fstab. 
+ never automatically purge this line.
+
+
+##priority configuration file
+Configuration files can exist in three places:
+•	/etc/tmpfiles.d/*.conf
+    The files under /etc/ tmpfiles.d/ are meant for administrators to configure custom temporary locations, and to override vendor-provided defaults.
+
+•	/run/tmpfiles.d/*.conf
+    The files under /run/tmpfiles.d/ are themselves volatile files, normally used by daemons to manage their own runtime temporary files.
+
+•	/usr/lib/tmpfiles.d/*.conf
+    The files in /usr/lib/tmpfiles.d/ are provided by the relevant RPM packages, and you should not edit these files. 
+
+*If a file in /run/tmpfiles.d/ has the same file name as a file in /usr/lib/tmpfiles.d/, then the file in /run/tmpfiles.d/ is used. 
+ If a file in /etc/tmpfiles.d/ has the same file name as a file in either /run/tmpfiles.d/ or /usr/lib/tmpfiles.d/, then the file in /etc/ tmpfiles.d/ is used.
+
+
+
+##configure systemd-tmpfiles to clean the /tmp directory so that it does not contain files that that have not been used in the last five days. 
+#copy /usr/lib/tmpfiles.d/tmp.conf to /etc/tmpfiles.d/tmp.conf.
+cp /usr/lib/tmpfiles.d/tmp.conf /etc/tmpfiles.d/tmp.conf
+
+#searchearch for the configuration line in /etc/tmpfiles.d/tmp.conf that applies to the /tmp directory
+#Replace the existing age of the temporary files in that configuration line with the new age of 5 days. Remove all the other lines from the file including the commented ones. 
+vim /etc/tmpfiles.d/tmp.conf
+
+q /tmp 1777 root root 5d
+
+*The preceding configuration causes systemd-tmpfiles to ensure that the directory /tmp exists with the octal permissions set to 1777. Both the owning user and group of /tmp must be root. 
+ The /tmp directory must be free from the temporary files which are unused in the last five days.
+
+#verify that the /etc/tmpfiles.d/tmp.conf file contains the correct configuration
+systemd-tmpfiles --clean /etc/tmpfiles.d/tmp.conf
+
+
+
+##add a new configuration that ensures that the /run/momentary directory exists with user and group ownership set to root. 
+##the octal permissions for the directory must be 0700 and the configuration should purge any file in this directory that remains unused in the last 30 seconds.
+#create the file called /etc/tmpfiles.d/momentary.conf 
+vim /etc/tmpfiles.d/momentary.conf
+
+q /run/momentary 0700 root root 30s
+
+#verify that the /etc/tmpfiles.d/momentary.conf file contains the appropriate configuration
+systemd-tmpfiles --create /etc/tmpfiles.dmomentary.conf
+
+#verify that the /run/momentary directory is created with the appropriate permissions, owner, and group owner
+ls -ld /run/momentary
+
+#clean stale files from /run/momentary, based on the rule mentioned in /etc/tmpfiles.d/momentary.conf
+systemd-tmpfiles --clean /etc/tmpfiles.d/momentary.conf
+

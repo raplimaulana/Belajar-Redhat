@@ -1,0 +1,55 @@
+##Switching users
+su - user02
+
+##Switching user root
+su -
+
+##Running command with sudo
+#sudo is configured to allow the user01 user to run the command usermod as root
+sudo usermod -L user02
+*contoh perintah lock account yang biasanya hanya bisa dilakukan oleh root
+
+#If there is a nonadministrative user account on the system that can use sudo to run the su command
+#The sudo su - command sets up the root environment exactly like a normal login because the su - command ignores the settings made by sudo and sets up >the environment from scratch.
+sudo su -
+
+#Another way to access the root account with sudo is to use the sudo -i command. 
+#The default configuration of the sudo -i command actually sets up some details of the root user's environment differently than a normal login. 
+#For example, it sets the PATH environment variable slightly differently. This affects where the shell will look to find commands.
+sudo -i
+
+
+
+
+
+
+### Configuring Sudo ###
+The main configuration file for sudo is /etc/sudoers. By default, /etc/sudoers also includes the contents of any files in the /etc/sudoers.d
+%wheel      ALL=(ALL)       ALL
+
+*%wheel    = the user or group to whom the rule applies.
+ ALL=(ALL) = specifies that on any host that might have this file, wheel can run any command. 
+ ALL       = specifies that wheel can run those commands as any user on the system.
+
+##To enable full sudo access for the user user01
+vim /etc/sudoers.d/user01
+user01      ALL=(ALL)       ALL
+
+atau
+
+vim /etc/sudoers 
+user01        ALL=(ALL)       NOPASSWD: ALL
+
+#enable full sudo access for the group group01
+vim /etc/sudoers.d/group01
+%group01        ALL=(ALL)       ALL
+
+#It is also possible to set up sudo to allow a user to run commands as another user without entering their password:
+vim /etc/sudoers 
+ansible     ALL=(ALL)       NOPASSWD:ALL
+
+
+
+
+
+

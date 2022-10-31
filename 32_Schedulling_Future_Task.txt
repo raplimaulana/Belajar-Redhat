@@ -1,0 +1,121 @@
+### SCHEDULLING ###
+System administrators often need to run recurring jobs. 
+Best practice is to run these jobs from system accounts rather than from user accounts. 
+
+Do not schedule to run these jobs using the crontab command, but instead use system-wide crontab.
+System-wide crontab files have an extra field before the command field; the user under whose authority the command should run.
+
+Recurring system jobs are defined in two locations: the /etc/crontab file, and files within the /etc/cron.d/ directory. 
+You should always create your custom crontab files under the /etc/ cron.d directory to schedule recurring system jobs. 
+Place the custom crontab file in /etc/ cron.d to protect it from being overwritten if any package update occurs to the provider of /etc/crontab, which may overwrite the existing contents in /etc/crontab. 
+
+The crontab system also includes repositories for scripts that need to run every hour, day, week, and month. 
+These repositories are directories called /etc/cron.hourly/, /etc/ cron.daily/, /etc/cron.weekly/, and /etc/cron.monthly/. 
+These directories contain executable shell scripts, not crontab files.
+
+*Remember to make any script you place in these directories executable. If a script is not executable, it will not run. 
+chmod +x script_name
+
+A command called run-parts called from the /etc/cron.d/0hourly file runs the /etc/ cron.hourly/ scripts. 
+The run-parts command also runs the daily, weekly, and monthly jobs, but it is called from a different configuration file called /etc/anacrontab.
+The purpose of /etc/anacrontab is to make sure that important jobs always run, and not skipped accidentally because the system was turned off or hibernating when the job should have been executed.
+
+*There may be a delay of several minutes in starting the job depending on the value of the Delay in minutes parameter specified for the job in /etc/anacrontab.
+
+There are different files in /var/spool/anacron/ for each of the daily, weekly, and monthly jobs to determine if a particular job has run. 
+When crond starts a job from /etc/anacrontab, it updates the time stamps of those files. 
+Syntax of /etc/anacrontab contains four fields per line, as follows:
+
+•	Period in days 
+    The interval in days for the job that runs on a repeating schedule. 
+    This field accepts an integer or a macro as its value. 
+    For example, the macro @daily is equivalent to the integer 1, which means that the job is executed on a daily basis. Similarly, the macro @weekly is equivalent to the integer 7, which means that the job is executed on a weekly basis.
+
+•	Delay in minutes 
+    The amount of time the crond daemon should wait before starting this job.
+
+•	Job identifier 
+    The unique name the job is identified as in the log messages.
+
+•	Command 
+    The command to be executed.
+
+The /etc/anacrontab file also contains environment variable declarations using the syntax NAME=value. Of special interest is the variable START_HOURS_RANGE, which specifies the time interval for the jobs to run. Jobs are not started outside of this range. 
+If on a particular day, a job does not run within this time interval, the job has to wait until the next day for execution.
+
+
+##schedule a recurring system job that generates a log message indicating the number of currently active users in the system
+#create a script file called /etc/cron.daily/usercount with the following content
+vim /etc/cron.daily/usercount
+
+#!/bin/bash
+USERCOUNT=$(w -h | wc -l)
+logger "There are currently ${USERCOUNT} active users"
+
+*w -h   = shows who users are logged in.
+ wc -l  = count of newline characters.
+ logger = generate the log message.
+
+#use the chmod command to enable the execute (x) permission on /etc/cron.daily/usercount
+chmod +x /etc/cron.daily/usercount
+
+
+
+
+
+
+### SYSTEMD TIMER###
+Systemd timer unit activates another unit of a different type (such as a service) whose unit name matches the timer unit name. 
+The timer unit allows timer-based activation of other units. 
+For easier debugging, systemd logs timer events in system journals.
+
+The sysstat package provides the systemd units called sysstat-collect.timer and sysstat-collect.service. 
+The timer unit triggers the service unit every 10 minutes to collect system activity data using the shell script called /usr/lib64/sa/sa1. 
+
+##install the sysstat package
+yum install sysstat
+
+##copy /usr/lib/systemd/system/sysstat-collect.timer to /etc/systemd/system/sysstat-collect.timer
+cp /usr/lib/systemd/system/sysstat-collect.timer /etc/systemd/system/sysstat-collect.timer
+
+*Do not modify any unit configuration file under the /usr/lib/systemd/system directory because any update to the provider package of the configuration file may override the configuration changes you made in that file. 
+ Make a copy of the unit configuration file you intend to change under the /etc/systemd/system directory and then modify the copy so that the configuration changes you make with respect to a unit does not get overridden by any update to the provider package. 
+ If two files exist with the same name under the /usr/lib/systemd/system and /etc/systemd/system directories, systemd parses the file under the /etc/systemd/system directory.
+ 
+##set the timer unit runs every 10 minutes
+vim /etc/systemd/system/sysstat-collect.timer
+
+[Unit]
+Description=Run system activity accounting tool every 10 minutes
+
+[Timer]
+OnCalendar=*:00/10
+
+[Install]
+WantedBy=sysstat.service
+
+*OnCalendar=*:00/10 = signifies that this timer unit activates the corresponding unit (sysstat-collect.service) every 10 minutes. 
+*you can specify more complex time intervals. For example, a value of 2019-03-* 12:35,37,39:16 against the OnCalendar parameter causes the timer unit to activate the corresponding service unit at 12:35:16, 12:37:16, and 12:39:16 every day throughout the entire month of March, 2019. 
+ You can also specify relative timers using parameters such as OnUnitActiveSec. For example, the OnUnitActiveSec=15min option causes the timer unit to trigger the corresponding unit 15 minutes after the last time the timer unit activated its corresponding unit.
+
+##after you change the timer unit configuration file, use the systemctl daemon-reload command to ensure that systemd is aware of the changes
+systemctl daemon-reload
+
+##activate the timer unit
+systemctl enable --now systat-collect.timer
+
+##the preceding changes cause the sysstat-collect.timer unit to trigger sysstat-collect.service unit every two minutes, which runs /usr/lib64/sa/sa1 1 1 
+##running /usr/lib64/sa/sa1 1 1 collects the system activity data in a binary file under the /var/log/sa directory
+while [$(ls /var/log/sa | wc -l) -eq 0]; do sleep 1s; done
+
+*In the while command above, the ls /var/log/sa | wc -l returns a 0 if the file does not exist and a 1 if it does exist. 
+ The while determines if this equals 0. And if so, enters the loop, which pauses for one second. 
+ When the file exists, exit the while loop.
+
+##verify that the binary file under the /var/log/sa directory got modified within last 10 minutes
+ls -l /var/log/sa
+date
+
+
+
+

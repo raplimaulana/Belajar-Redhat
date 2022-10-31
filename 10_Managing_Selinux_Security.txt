@@ -1,0 +1,121 @@
+### SELINUX ###
+Most Linux administrators are familiar with the standard user/group/other permission security model. This is a user and group based model known as discretionary access control. 
+SELinux provides an additional layer of security that is object-based and controlled by more sophisticated rules, known as mandatory access control.
+
+SELinux has three modes:
+•	Enforcing: SELinux is enforcing access control rules. Computers generally run in this mode.
+•	Permissive: SELinux is active but instead of enforcing access control rules, it records warnings of rules that have been violated. This mode is used primarily for testing and troubleshooting.
+•	Disabled: SELinux is turned off entirely: no SELinux violations are denied, nor even recorded. Discouraged!
+
+To allow remote anonymous access to a web server, firewall ports must be opened. However, this gives malicious people an opportunity to crack the system through a security exploit. 
+If they succeed in compromising the web server process they gain its permissions. Specifically, the permissions of the apache user and the apache group. 
+That user and group has read access to the document root, /var/www/html. It also has access to /tmp, and /var/tmp, and any other files and directories that are world writable.
+
+SELinux is a set of security rules that determine which process can access which files, directories, and ports. 
+Every file, process, directory, and port has a special security label called an SELinux context. 
+A context is a name used by the SELinux policy to determine whether a process can access a file, directory, or port. 
+By default, the policy does not allow any interaction unless an explicit rule grants access. If there is no allow rule, no access is allowed.
+
+unconfined_u:object_r:httpd_sys_content_t:s0 /var/www/html/file2
+     |          |            |             |          |          
+     v          v            v             v          v
+SELinux user   Role         Type         Level       File
+
+##display or set SELinux contexts
+ps -Zc httpd
+ls -Z /home
+
+##determine the current SELinux mode
+getenforce
+
+##set SELinux to a different mode
+setenforce 0               #disable
+setenforce Enforcing
+setenforce Permissive
+
+You can also configure SELinux persistently using the /etc/selinux/config file. 
+SELINUX = enforcing
+SELINUX = targeted
+
+
+
+
+
+
+### INITIAL SELINUX CONTEXT ###
+On systems running SELinux, all processes and files are labeled. 
+The label represents the security relevant information, known as the SELinux context.
+
+New files typically inherit their SELinux context from the parent directory, thus ensuring that they have the proper context.
+
+
+
+### CHANGING THE SELINUX CONTEXT OF A FILE ###
+Commands to change the SELinux context on files include semanage fcontext, restorecon, and chcon.
+
+The preferred method to set the SELinux context for a file is to declare the default labeling for a file using the semanage fcontext command,
+then applying that context to the file using the restorecon command. This ensures that the labeling will be as desired even after a complete relabeling of the file system.
+The chcon command changes SELinux contexts. chcon sets the security context on the file, stored in the file system. 
+
+restorecon -v /virtual
+chcon -t http_sys_content_t /virtual
+
+
+##defining selinux default file context rules
+The semanage fcontext command displays and modifies the rules that restorecon uses to set default file contexts. It uses extended regular expressions to specify the path and file names. 
+The most common extended regular expression used in fcontext rules is (/.*)?, which means “optionally, match a / followed by any number of characters”. 
+It matches the directory listed before the expression and everything in that directory recursively.
+
+semanage fcontext -l
+semanage fcontext -a -t httpd_sys_content_t '/virtual(/.*)?'
+
+
+
+
+
+
+### ADJUSTING SELINUX POLICY WITH BOOLEANS ###
+SELinux booleans are switches that change the behavior of the SELinux policy. SELinux booleans are rules that can be enabled or disabled.
+
+Commands useful for managing SELinux booleans include getsebool, which lists booleans and their state, and setsebool which modifies booleans. 
+setsebool -P modifies the SELinux policy to make the modification persistent. 
+semanage boolean -l reports on whether or not a boolean is persistent, along with a short description of the boolean.
+
+*Non-privileged users can run the getsebool command, but you must be a superuser to run semanage boolean -l and setsebool -P.
+
+getsebool -a 
+getsebool http_enable_homedirs
+sudo setsebool http_enable_homedirs on
+sudo setsebool -P http_enable_homedirs on               #The -P option writes all pending values to the policy, making them persistent across reboots. 
+sudo semanage boolean -l 
+sudo semanage boolean -l -c                             #To list booleans in which the current state differs from the default state.
+
+
+
+
+
+
+### INVESTIGATING AND RESOLVING SELINUX ISSUES ###
+##troubleshooting selinux issues 
+It is important to understand what actions you must take when SELinux prevents access to files on a server that you know should be accessible. Use the following steps as a guide to troubleshooting these issues:
+1.	Before thinking of making any adjustments, consider that SELinux may be doing its job correctly by prohibiting the attempted access. 
+    If a web server tries to access files in /home, this could signal a compromise of the service if web content is not published by users. 
+    If access should have been granted, then additional steps need to be taken to solve the problem.
+2.	The most common SELinux issue is an incorrect file context. This can occur when a file is created in a location with one file context and moved into a place where a different context is expected. 
+    In most cases, running restorecon will correct the issue. Correcting issues in this way has a very narrow impact on the security of the rest of the system.
+3.	Another remedy for overly restrictive access could be the adjustment of a Boolean. For example, the ftpd_anon_write boolean controls whether anonymous FTP users can upload files. 
+    You must turn this boolean on to permit anonymous FTP users to upload files to a server. Adjusting booleans requires more care because they can have a broad impact on system security.
+4.	It is possible that the SELinux policy has a bug that prevents a legitimate access. Since SELinux has matured, this is a rare occurrence. 
+    When it is clear that a policy bug has been identified, contact Red Hat support to report the bug so it can be resolved.
+
+#jika ada error pada saat curl http://servera/index.html, gunakan langkah berikut
+less /var/log/messages
+
+Mar 28 06:07:03 servera setroubleshoot[15326]: SELinux is preventing /usr/sbin/httpd from getattr access on the file /custom/index.html. 
+For complete SELinux messages run: sealert -l b1c9cc8f-a953-4625-b79b-82c4f4f1fee3
+
+sealert -l b1c9cc8f-a953-4625-b79b-82c4f4f1fee3
+ausearch -m AVC -ts recent
+semanage fcontext -a -t httpd_sys_content_t '/custom(/.*)?'
+semanage fcontext -l | grep custom
+restorecon -Rv /custom

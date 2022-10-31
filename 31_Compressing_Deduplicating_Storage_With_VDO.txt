@@ -1,0 +1,42 @@
+### Virtual Data Optimizer (VDO) ###
+Red Hat Enterprise Linux 8 includes the Virtual Data Optimizer (VDO) driver, which optimizes the data footprint on block devices.
+VDO is a Linux device mapper driver that reduces disk space usage on block devices, and minimizes the replication of data, saving disk space and even increasing data throughput. 
+
+The VDO layer is placed on top of an existing block storage device, such as a RAID device or a local disk. 
+Those block devices can also be encrypted devices. The storage layers, such as LVM logical volumes and file systems, are placed on top of a VDO device. 
+The following diagram shows the placement of VDO in an infrastructure consisting of KVM virtual machines that are using optimized storage devices.
+
+VDO applies three phases to data in the following order to reduce the footprint on storage devices:
+•	Zero-Block Elimination filters out data blocks that contain only zeroes (0) and records the information of those blocks only in the metadata. 
+    The nonzero data blocks are then passed to the next phase of processing. This phase enables the thin provisioning feature in the VDO devices.
+
+•	Deduplication eliminates redundant data blocks. 
+    When you create multiple copies of the same data, VDO detects the duplicate data blocks and updates the metadata to use those duplicate blocks as references to the original data block without creating redundant data blocks. 
+    The universal deduplication service (UDS) kernel module checks redundancy of the data through the metadata it maintains. This kernel module ships as part of the VDO.
+
+•	Compression is the last phase. The kvdo kernel module compresses the data blocks using LZ4 compression and groups them on 4 KB blocks.
+
+The logical devices that you create using VDO are called VDO volumes. 
+VDO volumes are similar to disk partitions; you can format the volumes with the desired file-system type and mount it like a regular file system. 
+You can also use a VDO volume as an LVM physical volume.
+
+To create a VDO volume, specify a block device and the name of the logical device that VDO presents to the user. 
+You can optionally specify the logical size of the VDO volume. 
+The logical size of the VDO volume can be more than the physical size of the actual block device.
+
+Because the VDO volumes are thinly provisioned, users can only see the logical space in use and are unaware of the actual physical space available. 
+If you do not specify the logical size while creating the volume, VDO assumes the actual physical size as the logical size of the volume. 
+This 1:1 ratio of mapping logical size to physical size gives better performance but provides less efficient use of storage space. 
+Based on your infrastructure requirements, you should prioritize either performance or space efficiency.
+
+##install the vdo and kmod-kvdo packages to enable VDO in the system
+yum install vdo kmod-kvdo
+
+##create a VDO volume
+vdo create --name=vdo1 --device=/dev/vdd --vdoLogicalSize=50G
+
+*if you do not specify the logical size while creating the volume, VDO assumes the actual physical size as the logical size of the volume
+*When the VDO volume is in place, you can format it with the file-system type of your choice and mount it under the file-system hierarchy on your system
+
+##displays a report on the VDO system, and the status of the VDO volume in YAML format
+vdo status --name=vdo1

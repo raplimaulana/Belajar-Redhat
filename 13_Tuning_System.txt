@@ -1,0 +1,53 @@
+### TUNING SYSTEM ###
+yum install tuned
+systemctl enable --now tuned
+
+The Tuned application provides profiles divided into the following categories:
+•	Power-saving profiles
+•	Performance-boosting profiles
+    •	Low latency for storage and network
+    •	High throughput for storage and network
+    •	Virtual machine performance
+    •	Virtualization host performance
+
+-----------------------|--------------------------------------------------------------------------------------|
+     TUNED PROFILE     |                                    Purpose                                           | 
+-----------------------|--------------------------------------------------------------------------------------|
+balanced               | Ideal for system that require a compromise between power saving and performance.     |
+-----------------------|--------------------------------------------------------------------------------------|
+dekstop                | Derived from the balanced profile.                                                   |
+                       | Provides faster response of interactive applications.                                |
+-----------------------|--------------------------------------------------------------------------------------|
+throughput-performance | Tunes the system for maximum throughput.                                             |
+-----------------------|--------------------------------------------------------------------------------------|
+latency-performance    | Ideal for server system that require low latency at the expense of power consumption |      
+-----------------------|--------------------------------------------------------------------------------------|
+network-latency        | Derived from the latency-performance profile.                                        |
+                       | It enables additional network tuning parameters to provide low network latency.      |
+-----------------------|--------------------------------------------------------------------------------------|
+network-throughput     | Derived from the throughput-performance profile.                                     |
+                       | Additional network tuning parameters are applied for maximum network throughput.     |
+-----------------------|--------------------------------------------------------------------------------------|
+powersave              | Tunes the system for maximum power saving.                                           |
+-----------------------|--------------------------------------------------------------------------------------|
+oracle                 | Optimized for Oracle database loads based on the throughput-performance profile.     |
+-----------------------|--------------------------------------------------------------------------------------|
+virtual-guest          | Tunes the system for maximum performance if it runs on a virtual machine             |
+-----------------------|--------------------------------------------------------------------------------------|
+virtual-host           | Tunes the system for maximum performance if it acts as a host for virtual machine.   |
+-----------------------|--------------------------------------------------------------------------------------|
+
+##identifies the currently active tuning profile 
+tuned-adm active
+
+##lists all available tuning profiles (including both built-in profiles and custom tuning profiles created by a system administrator)
+tuned-adm list 
+
+##switch the active profile to a different one that better matches the system's current tuning requirements.
+tuned-adm profile throughput-performance
+
+##check recommend a tuning profile for the system (This mechanism is used to determine the default profile of a system after installation)
+tuned-adm recommend 
+
+##turn off tuning
+tuned-adm off

@@ -1,0 +1,56 @@
+##shows detailed information about permissions and ownership
+ls -l file
+ls -ld /home         #specific
+ls -la               #show hidden file
+
+drwx-wxr--. 2 database1 consultant1 4096 Apr 4 10:23 .
+
+d   = directory
+rwx = user that own file
+-wx = the group that own file
+r-- = all other user
+
+.   = directory itself
+..  = parent directory
+
+
+##changing file and diretory permissions
+chmod go=rw folder1
+chmod a+x folder2
+
+•	Who is u, g, o, a (for user, group, other, all)
+•	What is +, -, = (for add, remove, set exactly)
+•	Which is r, w, x (for read, write, execute)
+
+chmod 750 folder1
+chmod 644 folder2
+
+•	Start with 0.
+•	If the read permission should be present for this access level, add 4.
+•	If the write permission should be present, add 2.
+•	If the execute permission should be present, add 1.
+
+Examine the permissions -rwxr-x---. 
+For the user, rwx is calculated as 4+2+1=7 
+For the group, r-x is calculated as 4+0+1=5
+for other users, --- is represented with 0. 
+Putting these three together, the numeric representation of those permissions is 750.
+
+The chmod command supports the "-R" option to recursively set permissions on the files in an entire directory tree.
+When using the "-R" option, it can be useful to set permissions symbolically using the "X" option. 
+This allows the execute (search) permission to be set on directories so that their contents can be accessed, without changing permissions on most files.
+
+chmod -R g+rwX demodir
+
+
+##changing file and directory user or group ownership
+#change user owner
+chown student folder1
+chown -R student folder1
+
+#change group owner
+chown :admin folder1
+
+#change user and group owner at the same time
+chown student:admin folder1
+

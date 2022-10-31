@@ -1,0 +1,38 @@
+##Creating directories
+mkdir Video
+mkdir Projectx Projecty
+mkdir -p Video/Watched
+
+##Check directories sekarang
+pwd
+
+##Copying files
+#Copy file di folder yang sekarang dibuka ke folder tertentu 
+cp test1.txt Projectx
+
+#Copy file di folder tertentu ke folder sekarang
+cp etc/hostname .
+
+#Copy semua isi folder ke folder tertentu
+cp -r Thesis Projectx
+
+
+##Moving file
+mv test1.txt Projectx
+
+##Removing file and directories
+#Menghapus file
+rm test1.txt 
+
+#Menghapus semua file di folder tertentu
+rm -f Projectx/Chapter1
+
+#Menghapus folder kosong
+rmdir Projectx
+
+#Menghapus folder beserta filenya
+rmdir -f Projectx
+
+
+
+

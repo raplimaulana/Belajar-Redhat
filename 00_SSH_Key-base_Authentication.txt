@@ -1,0 +1,15 @@
+##Login use SSH
+ssh remoteuser@remotehost
+
+##Generating SSH key
+#secara default filenya terdapat pada ~/.ssh/id_rsa dan ~/.ssh/id_rsa.pub
+ssh-keygen -f .ssh/key-with-pass
+*option -f berfungsi untuk menyimpan public key dan private key secara default pada folder /home/user/.ssh/key-with-pass dan /home/user/.ssh/key-with-pass.pub
+
+
+##Sharing public key
+ssh-copy-id -i .ssh/key-with-pass.pub user@remotehost
+*option -i berfungsi untuk menunujukan lokasi spesifik public key yang tersimpan
+
+
+

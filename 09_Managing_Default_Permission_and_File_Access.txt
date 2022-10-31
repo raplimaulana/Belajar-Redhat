@@ -1,0 +1,66 @@
+### SPECIAL PERMISSIONS ###
+
+Special permissions constitute a fourth permission type in addition to the basic user, group, and other types. 
+As the name implies, these permissions provide additional access-related features over and above what the basic permission types allow. 
+
+------------|------------------------------------------------|-----------------------------------------|
+SPECIAL     |              EFFECT ON FILE                    |         EFECT ON DIRECTORIES            |
+PERMISSION  |                                                |                                         |
+------------|------------------------------------------------|-----------------------------------------|
+u+s (suid)  | File executes as the user that owns the file,  | No effect                               |
+            | not the user that run file.                    |                                         |
+------------|------------------------------------------------|-----------------------------------------|
+g+s (sgid)  | File executes as the group that owns the file. | First newly created in the directory    | 
+            |                                                | have their group owner set to match     |
+            |                                                | the group owner of directory            |
+------------|------------------------------------------------|-----------------------------------------|
+o+t (sticky)| No effect.                                     | User with write access to the directory |
+            |                                                | can only remove files that the own;     |
+            |                                                | they cannot remove or force save to     |      
+            |                                                | files owned by other user.              |
+------------|------------------------------------------------|-----------------------------------------|
+
+#setuid
+#The setuid permission on an executable file means that commands run as the user owning the file, not as the user that ran the command
+-rwsr-xr-x. 1 root root 35504 Jul 16 2010 /usr/bin/passwd
+
+*In a long listing, you can identify the setuid permissions by a lowercase s where you would normally expect the x (owner execute permissions) to be. 
+ If the owner does not have execute permissions, this is replaced by an uppercase S.
+
+
+#setgid
+#If setgid is set on an executable file, commands run as the group that owns that file, not as the user that ran the command, in a similar way to setuid works
+drwxr-sr-x. 3 root systemd-journal 60 May 18 09:15 /run/log/journal
+
+
+#sticky
+#the sticky bit for a directory sets a special restriction on deletion of files. Only the owner of the file (and root) can delete files within the directory
+drwxrwxrwt. 39 root root 4096 Feb 8 20:52 /tmp
+
+
+##setting special permission
+chmod g+s folder1
+chmod 2770 folder1            #Set the setgid bit and add read/write/execute permissions for user and group, with no access for others, on directory
+
+•	Symbolically: setuid = u+s; setgid = g+s; sticky = o+t
+•	Numerically (fourth preceding digit): setuid = 4; setgid = 2; sticky = 1
+
+
+##default file permission
+If you create a new directory, the operating system starts by assigning it octal permissions 0777 (drwxrwxrwx). 
+If you create a new regular file, the operating system assignes it octal permissions 0666 (-rw-rw-rw-). 
+
+However, the shell session will also set a umask to further restrict the permissions that are initially set. 
+This is an octal bitmask used to clear the permissions of new files and directories created by a process. 
+If a bit is set in the umask, then the corresponding permission is cleared on new files. 
+For example, the umask 0002 clears the write bit for other users. The leading zeros indicate the special, user, and group permissions are not cleared. 
+A umask of 0077 clears all the group and other permissions of newly created files.
+
+umask 022
+
+*umask 022 = chmod 755 (directory) = chmod 644 (file)
+ umask 000 = chmod 777 (directory) = chmod 666 (file)
+
+
+#check user's default umask value
+umask

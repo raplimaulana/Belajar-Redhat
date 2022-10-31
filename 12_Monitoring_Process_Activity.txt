@@ -1,0 +1,90 @@
+### LOAD AVERAGE ###
+Load average is a measurement provided by the Linux kernel that is a simple way to represent the perceived system load over time. 
+It can be used as a rough gauge of how many system resource requests are pending, and to determine whether system load is increasing or decreasing over time.
+
+Every five seconds, the kernel collects the current load number, based on the number of processes in runnable and uninterruptible states. 
+This number is accumulated and reported as an exponential moving average over the most recent 1, 5, and 15 minutes.
+
+Load average is a rough measurement of how many processes are currently waiting for a request to complete before they can do anything else. The request might be for CPU time to run the process. 
+Alternatively, the request might be for a critical disk I/O operation to complete, and the process cannot be run on the CPU until the request completes, even if the CPU is idle. 
+Either way, system load is impacted and the system appears to run more slowly because processes are waiting to run.
+
+##Interpreting Displayed Load Average Values
+The uptime command is one way to display the current load average. 
+It prints the current time, how long the machine has been up, how many user sessions are running, and the current load average.
+
+uptime
+
+##determine how many CPUs a system has
+lscpu
+
+*A value below 1 indicates satisfactory resource utilization and minimal wait times. 
+ A value above 1 indicates resource saturation and some amount of processing delay
+
+ An idle CPU queue has a load number of 0. Each process waiting for a CPU adds a count of 1 to the load number. 
+ If one process is running on a CPU, the load number is one, the resource (the CPU) is in use, but there are no requests waiting. 
+ If that process is running for a full minute, its contribution to the one-minute load average will be 1.
+
+
+
+
+
+ 
+ ### REAL-TIME PROCESS MONITORING ###
+ The top program is a dynamic view of the system's processes, displaying a summary header followed by a process or thread list similar to ps information. 
+ Unlike the static ps output, top continuously refreshes at a configurable interval, and provides capabilities for column reordering, sorting, and highlighting. 
+
+ Default output columns are recognizable from other resource tools:
+•	The process ID (PID).
+•	User name (USER) is the process owner.
+•	Virtual memory (VIRT) is all memory the process is using, including the resident set, shared libraries, and any mapped or swapped memory pages. (Labeled VSZ in the ps command.)
+•	Resident memory (RES) is the physical memory used by the process, including any resident shared objects. (Labeled RSS in the ps command.)
+•	Process state (S) displays as:
+    •	D = Uninterruptible Sleeping
+    •	R = Running or Runnable
+    •	S = Sleeping
+    •	T = Stopped or Traced
+    •	Z = Zombie
+•	CPU time (TIME) is the total processing time since the process started. May be toggled to include cumulative time of all previous children.
+•	The process command name (COMMAND).
+
+Fundametal keystroke in top
+-----------|---------------------------------------------------------------------------------|
+    KEY    |              Purpose                                                            | 
+-----------|---------------------------------------------------------------------------------|
+? or h     | Help for interactive keystrokes.                                                |
+-----------|---------------------------------------------------------------------------------|
+l, t, m    | Toggles for load, threads and memory header lines.                              |
+-----------|---------------------------------------------------------------------------------|
+1          | Toggle showing individual CPUs or a summary for all CPUs in header.             |
+-----------|---------------------------------------------------------------------------------|
+s (1)      | Change the refresh (screen) rate in decimal second (ex: 0.5, 1, 5).             |
+-----------|---------------------------------------------------------------------------------|
+b          | Toogle reverse highlighting for Running process. Default is bold only.          |
+-----------|---------------------------------------------------------------------------------|
+Shift+b    | Enables use of bold in display, in the header and for Running processes.        |
+-----------|---------------------------------------------------------------------------------|
+Shift+h    | Toggle threads. Show process summary or individual threads.                     |
+-----------|---------------------------------------------------------------------------------|
+u, Shift+u | Filter for any user name (effective, real).                                     |
+-----------|---------------------------------------------------------------------------------|
+Shift+m    | Sorts process listing by memory usage, in descending order.                     |
+-----------|---------------------------------------------------------------------------------|
+Shift+p    | Sorts process listing by memoru utilization, in descending order.               |
+-----------|---------------------------------------------------------------------------------|
+k (1)      | Kill a process. When prompted, enter PID then signal.                           |
+-----------|---------------------------------------------------------------------------------|
+r (1)      | Renice a process. When prompted, enter PID then nice_value.                     |
+-----------|---------------------------------------------------------------------------------|
+Shift+w    | Write (save) the current display configuration for use at the next top restart. |
+-----------|---------------------------------------------------------------------------------|
+q          | Quit.                                                                           |
+-----------|---------------------------------------------------------------------------------|
+f          | Manage the columns by enabling or disabling fields                              |
+           | Also allows you to set the sort field for top.                                  |
+-----------|---------------------------------------------------------------------------------|
+
+*Note: (1) = Not available if top started in secure mode.
+
+#top command
+top
